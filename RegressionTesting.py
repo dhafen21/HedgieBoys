@@ -49,6 +49,7 @@ def display_simple_macd_call_charts(company: Company, lookback: int = None) -> f
     ax1.plot(company.signal[-lookback:], label="signal")
 
     ax2.plot(company.close[-lookback:], label="Price")
+    ax2.plot(company.sma[-lookback:], label="SMA")
     for i in range(len(company.macd[-lookback:])):
         if col[i] != "white":
             ax1.scatter(x=i, y=0, c=col[i], s=18)
@@ -59,8 +60,8 @@ def display_simple_macd_call_charts(company: Company, lookback: int = None) -> f
              horizontalalignment='center', verticalalignment='center',
              transform=ax1.transAxes)
 
-    print("Total profit: {}".format(profit))
-    plt.savefig("{}_plot.png".format(company.ticker))
+    print("{} total profit: {}".format(company.ticker, profit))
+    plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
     company.plot = ax1
     return profit
 
@@ -143,6 +144,7 @@ def display_simple_macd_put_charts(company: Company, lookback: int = None) -> fl
     ax1.plot(company.signal[-lookback:], label="signal")
 
     ax2.plot(company.close[-lookback:], label="Price")
+    ax2.plot(company.sma[-lookback:], label="SMA")
     for i in range(len(company.macd[-lookback:])):
         if col[i] != "white":
             ax1.scatter(x=i, y=0, c=col[i], s=18)
@@ -153,7 +155,7 @@ def display_simple_macd_put_charts(company: Company, lookback: int = None) -> fl
              horizontalalignment='center', verticalalignment='center',
              transform=ax1.transAxes)
 
-    print("Total profit: {}".format(profit))
-    plt.savefig("{}_plot.pdf".format(company.ticker))
+    print("{} total profit: {}".format(company.ticker, profit))
+    plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
     company.plot = ax1
     return profit
