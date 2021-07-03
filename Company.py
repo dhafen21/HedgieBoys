@@ -18,6 +18,7 @@ class Company:
         self.histogram = None
         self.sma = None
         self.plot = None
+        self.owned = False
 
     def get_signal(self):
         """
