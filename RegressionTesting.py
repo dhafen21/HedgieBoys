@@ -1,13 +1,17 @@
+import time
+
 import matplotlib.pyplot as plt
 from Company import *
+from EmailSender import send_email
 
 
-def display_simple_macd_call_charts(company: Company, lookback: int = None) -> float:
+def display_simple_macd_call_charts(company: Company, lookback: int = None, save_plot: bool = False) -> float:
     """
     Displays two charts. One is the MACD line and the signal line. the second chart displays the price
     It also plots the position of the hypothetical buys and sells when buying on convergence to the upside
     and selling when the price dips below the simple moving average.
 
+    :param save_plot: bool to say whether or not you save a pdf of the plot. Default is false
     :param company: The company (instance of Company class) that is being tested
     :param lookback: How long of a period to examine / backtest
     :return: returns the hypothetical profit from this strategy
@@ -61,7 +65,8 @@ def display_simple_macd_call_charts(company: Company, lookback: int = None) -> f
              transform=ax1.transAxes)
 
     print("{} total profit: {}".format(company.ticker, profit))
-    plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
+    if save_plot:
+        plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
     company.plot = ax1
     return profit
 
@@ -97,12 +102,14 @@ def backtest_simple_macd_call(company: Company) -> float:
     print("Total profit: {}".format(profit))
     return profit
 
-def display_simple_macd_put_charts(company: Company, lookback: int = None) -> float:
+
+def display_simple_macd_put_charts(company: Company, lookback: int = None, save_plot: bool = False) -> float:
     """
     Displays two charts. One is the MACD line and the signal line. the second chart displays the price
     It also plots the position of the hypothetical buys and sells when buying on divergence to the downside
     and selling when the price increases above the simple moving average.
 
+    :param save_plot: bool to say whether or not you save a pdf of the plot. Default is false
     :param company: The company (instance of Company class) that is being tested
     :param lookback: How long of a period to examine / backtest
     :return: returns the hypothetical profit from this strategy
@@ -156,6 +163,9 @@ def display_simple_macd_put_charts(company: Company, lookback: int = None) -> fl
              transform=ax1.transAxes)
 
     print("{} total profit: {}".format(company.ticker, profit))
-    plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
+
+    if save_plot:
+        plt.savefig("Plots/{}_plot.pdf".format(company.ticker))
+
     company.plot = ax1
     return profit

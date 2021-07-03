@@ -34,7 +34,7 @@ def initialize_companies(company_array: [], td: TDClient, period_type: str = "da
     for company in company_array:
         quote = td.get_price_history(company, period_type=period_type, period=period, frequency_type=freq_type,
                                      frequency=freq,
-                                     extended_hours=False)
+                                     extended_hours=True)
         companies.append(Company(company, quote))
     return companies
 
@@ -51,3 +51,10 @@ def init_macd_indicators(companies: [Company], fastperiod: int = 12, slowperiod:
     for company in companies:
         company.set_macd_indicators(fastperiod=fastperiod, slowperiod=slowperiod, signalperiod=signalperiod)
         company.set_sma()
+
+
+def update_company_prices(companies: [Company], td: TDClient):
+    for company in companies:
+        quote = td.get_price_history(company, period_type="day", period="1", frequency_type="min",
+                                     frequency="5", extended_hours=True)
+        company.reset_time_series(quote)

@@ -18,7 +18,8 @@ class Company:
         self.histogram = None
         self.sma = None
         self.plot = None
-        self.owned = False
+        self.call_pos = False
+        self.put_pos = False
 
     def get_signal(self):
         """
@@ -64,3 +65,11 @@ class Company:
         """
         self.macd, self.signal, self.histogram = macd(self.close, fastperiod, slowperiod, signalperiod)
 
+    def reset_time_series(self, quote):
+        self.time_series = quote["candles"]
+        self.close = numpy.array([float(stick["close"]) for stick in self.time_series])
+        self.open = numpy.array([float(stick["open"]) for stick in self.time_series])
+        self.high = numpy.array([float(stick["high"]) for stick in self.time_series])
+        self.low = numpy.array([float(stick["low"]) for stick in self.time_series])
+        self.volume = numpy.array([float(stick["volume"]) for stick in self.time_series])
+        self.datetime = numpy.array([stick["datetime"] for stick in self.time_series])
