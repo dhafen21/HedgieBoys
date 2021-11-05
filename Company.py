@@ -4,8 +4,8 @@ import numpy
 
 class Company:
 
-    def __init__(self, ticker, time_series):
-        self.ticker = ticker
+    def __init__(self, name, time_series):
+        self.name = name
         self.time_series = time_series["candles"]
         self.close = numpy.array([float(stick["close"]) for stick in self.time_series])
         self.open = numpy.array([float(stick["open"]) for stick in self.time_series])
@@ -20,6 +20,9 @@ class Company:
         self.plot = None
         self.call_pos = False
         self.put_pos = False
+
+    def __init__(self, name):
+        self.name = name
 
     def get_signal(self):
         """
@@ -65,11 +68,11 @@ class Company:
         """
         self.macd, self.signal, self.histogram = macd(self.close, fastperiod, slowperiod, signalperiod)
 
-    def reset_time_series(self, quote):
-        self.time_series = quote["candles"]
-        self.close = numpy.array([float(stick["close"]) for stick in self.time_series])
-        self.open = numpy.array([float(stick["open"]) for stick in self.time_series])
-        self.high = numpy.array([float(stick["high"]) for stick in self.time_series])
-        self.low = numpy.array([float(stick["low"]) for stick in self.time_series])
-        self.volume = numpy.array([float(stick["volume"]) for stick in self.time_series])
-        self.datetime = numpy.array([stick["datetime"] for stick in self.time_series])
+    def reset_time_series(self, time_series):
+        self.time_series = time_series
+        self.close = numpy.array([float(stick.c) for stick in self.time_series])
+        self.open = numpy.array([float(stick.o) for stick in self.time_series])
+        self.high = numpy.array([float(stick.h) for stick in self.time_series])
+        self.low = numpy.array([float(stick.l) for stick in self.time_series])
+        self.volume = numpy.array([float(stick.v) for stick in self.time_series])
+        self.datetime = numpy.array([stick.t for stick in self.time_series])
