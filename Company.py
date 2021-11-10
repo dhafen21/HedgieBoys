@@ -1,4 +1,4 @@
-from Toolset import *
+from TechnicalIndicators import *
 import numpy
 
 
@@ -20,9 +20,14 @@ class Company:
         self.plot = None
         self.call_pos = False
         self.put_pos = False
+        self.holding = False
+        self.price = 0
+        self.current_order = None
 
     def __init__(self, name):
         self.name = name
+        self.holding = False
+        self.price = 0
 
     def get_signal(self):
         """

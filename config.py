@@ -10,8 +10,8 @@ refresh_token = "nAJz/hmAznN4lAy4rLdMM1WXkfJe+/bgCEOGTHLGndTsMyzzjF4pzbUYmkFugnx
 paper_api_key_dhafen21 = "PK06PPIBMJ2MIB4QXCBZ"
 paper_secret_key_dhafen21 = 'hRDDiKDWHI21hmPRBIaYAwqjTz2RX5yD43Ptm09f'
 
-paper_api_key_hafen_school = "PKUFLKSX84Y7T33P2YE0"
-paper_secret_key_hafen_school = "qyOH7u6Tq5IiX3ZoXTmnkabnAf6YG8w6wzrz8syN"
+paper_api_key_hafen_school = "PKUVQXXUGS6V0SIMDN3J"
+paper_secret_key_hafen_school = "mY34VgjavAeBY8CrH3CF3Q70016L40cu2SsxlMSU"
 
 real_api_key_hafen_school = 'AKCOCYBHJUO3RQ6XTM46'
 real_secret_key_hafen_school = 'HuELhMmU6UuaAuy3T5gDFpeUl/lxKgDY3qW5Thz0'
