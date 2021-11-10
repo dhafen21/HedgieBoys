@@ -49,6 +49,7 @@ def run_live():
     api = tradeapi.REST(paper_api_key_hafen_school, paper_secret_key_hafen_school, paper_url, api_version='v2')
     names = get_trade_list()
     companies = init_companies_alpaca(names, api, "1Min", 1000)
+    init_purchased_companies(api, companies)
 
     while time.localtime().tm_hour < 15:
         update_positions(api, companies)
@@ -106,4 +107,41 @@ def update_positions(api: tradeapi, companies: [Company]):
             if company.current_order.filled_at is not None:
                 print("{} was sold for {}".format(company.name, company.current_order.filled_avg_price))
                 company.holding = False
+
+
+def init_purchased_companies(api: tradeapi.REST, companies: [Company]):
+    positions = api.list_positions()
+    orders = api.list_orders()
+
+    for pos in positions:
+        for comp in companies:
+            if pos.symbol == comp.name:
+                print("Found existing position for {}".format(comp.name))
+                comp.holding = True
+                for order in orders:
+                    if order.symbol == comp.name:
+                        print("Also found a corresponding order for {}".format(comp.name))
+                        comp.current_order = order
+                        break
+                if comp.current_order is None:
+                    try:
+                        cur_price = nasdaq_current_price(comp.name)
+                        time.sleep(1)
+                    except:
+                        print("bad price for {}".format(comp.name))
+                        break
+                    comp.close = np.append(comp.close[1:], [cur_price])
+                    difference = get_ema_difference(5, 100, comp)
+                    std = standard_deviation(difference)
+                    comp.current_order = api.submit_order(
+                        symbol=comp.name,
+                        qty=pos.qty,
+                        side="sell",
+                        type="limit",
+                        time_in_force="day",
+                        limit_price=round(float(pos.cost_basis) / float(pos.qty), 2) + std
+                    )
+                break
+
+
 

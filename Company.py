@@ -4,6 +4,8 @@ import numpy
 
 class Company:
 
+    current_order = None
+
     def __init__(self, name, time_series):
         self.name = name
         self.time_series = time_series["candles"]
@@ -22,7 +24,6 @@ class Company:
         self.put_pos = False
         self.holding = False
         self.price = 0
-        self.current_order = None
 
     def __init__(self, name):
         self.name = name

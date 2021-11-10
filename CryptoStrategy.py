@@ -17,7 +17,6 @@ timeSeries_length = 100
 
 trader = CryptoTrader()
 trader.init_currencies(["BCH", "BSV", "ETC", "LTC"])
-trader.init_timeseries()
 
 def get_strategy():
     try:
@@ -37,7 +36,7 @@ while True:
     if strategy == "clean":
         break
 
-    action = trader.flow1()
+    action = trader.flow()
     if action:
         print_time()
         print("____________\n")

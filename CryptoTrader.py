@@ -1,12 +1,6 @@
 import numpy
-
-from config import *
 import robin_stocks.robinhood as r
-import yfinance as yf
-import numpy as np
-import talib
 from Currency import *
-import time
 from TechnicalIndicators import *
 
 
@@ -24,6 +18,8 @@ class CryptoTrader:
         for symbol in currency_list:
             self.currencies.append(Currency(symbol))
 
+        self.init_timeseries()
+
         self.init_purchased_currencies()
 
     def init_timeseries(self):
@@ -40,60 +36,39 @@ class CryptoTrader:
         currency.ema_difference = long_ema[p2:] - short_ema[p2:]
         currency.std_dev = standard_deviation(currency.ema_difference)
 
-
     def init_purchased_currencies(self):
         currencies = r.get_crypto_positions()
+        orders = r.get_all_open_crypto_orders()
         for currency in currencies:
             symbol = currency['currency']['code']
             if symbol in self.symbols:
                 quantity = float(currency['quantity'])
                 if quantity != 0:
+                    cost_basis = float(currency["cost_bases"][0]["direct_cost_basis"])
                     print("Initializing Sell info for {}".format(symbol))
-                    for currency in self.currencies:
-                        if currency.symbol == symbol:
-                            ini_inv = self.read_file(currency)
-                            purch_price = float(ini_inv) / quantity
-                            currency.sell_goal = purch_price + currency.std_dev
-                            print("Sell goal for {} is {}".format(currency.symbol, currency.sell_goal))
-                            currency.waiting_for_sell = True
-                            currency.waiting_for_buy = False
-                            currency.purchased_quantity = quantity
+                    for c in self.currencies:
+                        if c.symbol == symbol:
+                            for order in orders:
+                                if order["currency_pair_id"] == r.crypto.get_crypto_id(symbol):
+                                    print("order exists for {}".format(symbol))
+                                    c.waiting_for_sell_execution = True
+                                    c.waiting_for_buy = False
+                                    c.current_order = order
+                                    break
+                            if c.current_order is not None:
+                                break
+                            c.sell_goal = cost_basis * 1.005
+                            print("Sell goal for {} is {}".format(c.symbol, c.sell_goal))
+                            c.waiting_for_sell = True
+                            c.waiting_for_buy = False
+                            c.purchased_quantity = quantity
                             self.num_positions += 1
-
-    def five_minute_variation(self, currency: Currency):
-        local_max = max(currency.timeSeries[-20:])
-        local_min = min(currency.timeSeries[-20:])
-
-        currency.volatility = (local_max - local_min) / local_min
-
-    def rsi(self, currency: Currency, minutes):
-        if minutes == 0:
-            currency.rsi = 0
-            return
-        rsi_lookback = minutes * 4
-        currency.rsi = (talib.RSI(currency.timeSeries[-(rsi_lookback + 1):], rsi_lookback))[-1]
-
-    def get_historical_crypto_price(self, currency: Currency):
-        currency.timeSeries = currency.timeSeries[-20:]
-        self.get_current_price(currency)
-        currency.timeSeries = np.append(currency.timeSeries, currency.current_price)
 
     def get_current_price(self, currency: Currency):
         currency.current_price = float(r.get_crypto_quote(currency.symbol)["mark_price"])
         return currency.current_price
 
-    def five_min_average_price(self, currency: Currency):
-        """Calculates the price average over the last 5 minutes"""
-        currency.average = np.average(currency.timeSeries[-20:])
-
-    def update_currency_indicators(self, currency: Currency, rsi_lookback):
-        """Calculates each of the data members for the currency"""
-        self.get_historical_crypto_price(currency)
-        self.five_minute_variation(currency)
-        self.rsi(currency, rsi_lookback)
-        self.five_min_average_price(currency)
-
-    def flow1(self):
+    def flow(self):
         action = False
         for currency in self.currencies:
             time.sleep(2)
@@ -109,43 +84,6 @@ class CryptoTrader:
             elif currency.waiting_for_sell_execution:
                 action = self.waiting_for_sell_execution(currency) or action
         return action
-
-
-
-    def flow(self, decrease, goal_increase, decrease_lookback, rsi_lookback, rsi_threshold):
-        """Pattern recognition that decides when to buy and sell
-        :param decrease: the desired percent decrease given from the high in the currency timeseries
-        :type info: float
-        :param goal_increase: desired increase for the given currency. Sets the sell threshold
-        :type goal_increase: float
-        :param decrease_lookback: desired lookback length in minutes for last high
-        :type decrease_lookback: int
-        :param rsi_lookback: lookback length for rsi threshold
-        :type rsi_lookback: int
-        :param rsi_threshold: Smalles threshold for when to buy the stock for the rebound
-        :type rsi_threshold: int
-        :returns: None"""
-
-        for currency in self.currencies:
-            time.sleep(1)  ##Lets make sure robinhood doesn't ban us
-            self.update_currency_indicators(currency, rsi_lookback)
-            if currency.waiting_for_buy:
-                self.waiting_for_buy(currency)
-            elif currency.waiting_for_buy_execution:
-                self.waiting_for_buy_execution(currency)
-            elif currency.waiting_for_sell:
-                self.waiting_for_sell(currency)
-            elif currency.waiting_for_sell_execution:
-                self.waiting_for_sell_execution(currency)
-
-    def clean_up(self, rsi_lookback=0):
-        for currency in self.currencies:
-            time.sleep(1)
-            self.update_currency_indicators(currency, rsi_lookback)
-            if currency.waiting_for_sell:
-                self.waiting_for_sell(currency)
-            elif currency.waiting_for_buy_execution:
-                self.waiting_for_sell_execution(currency)
 
     def waiting_for_buy(self, currency: Currency):
         if currency.ema_difference[-1] > (2 * currency.std_dev):
