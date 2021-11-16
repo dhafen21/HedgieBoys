@@ -5,6 +5,7 @@ import numpy
 class Company:
 
     current_order = None
+    last_buy = None
 
     def __init__(self, name, time_series):
         self.name = name

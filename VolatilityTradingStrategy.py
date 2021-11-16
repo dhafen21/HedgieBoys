@@ -53,14 +53,15 @@ def run_live():
 
     while time.localtime().tm_hour < 15:
         update_positions(api, companies)
-        print("sleeping")
+        if time.localtime().tm_min % 5 == 0:
+            print(datetime.now())
         time.sleep(60)
 
 
 def update_positions(api: tradeapi, companies: [Company]):
     for company in companies:
         try:
-            curPrice = nasdaq_current_price(company.name)
+            curPrice = float(api.get_latest_trade(company.name).price)
             time.sleep(1)
         except:
             print("bad price for {}".format(company.name))
@@ -71,10 +72,10 @@ def update_positions(api: tradeapi, companies: [Company]):
         if not company.holding:
             if difference[-1] < -2 * std:
                 buying_power = float(api.get_account().buying_power)
-                if buying_power < 10000:
+                if buying_power < 25000:
                     print("not enough money")
                     break
-                comp_price = nasdaq_current_price(company.name)
+                comp_price = float(api.get_latest_trade(company.name).price)
                 print("Buying {}".format(company.name))
                 try:
                     company.current_order = api.submit_order(
@@ -125,7 +126,7 @@ def init_purchased_companies(api: tradeapi.REST, companies: [Company]):
                         break
                 if comp.current_order is None:
                     try:
-                        cur_price = nasdaq_current_price(comp.name)
+                        cur_price = float(api.get_last_trade(comp.name).price)
                         time.sleep(1)
                     except:
                         print("bad price for {}".format(comp.name))
@@ -141,7 +142,52 @@ def init_purchased_companies(api: tradeapi.REST, companies: [Company]):
                         time_in_force="day",
                         limit_price=round(float(pos.cost_basis) / float(pos.qty), 2) + std
                     )
-                break
+                continue
 
 
-
+def layer_positions(api: tradeapi, companies: [Company]):
+    for company in companies:
+        try:
+            curPrice = float(api.get_latest_trade(company.name).price)
+            time.sleep(1)
+        except:
+            print("bad price for {}".format(company.name))
+            break
+        company.close = np.append(company.close[1:], [curPrice])
+        difference = get_ema_difference(5, 100, company)
+        std = standard_deviation(difference)
+        if company.last_buy is None or (company.last_buy - datetime.now()).seconds > 300:
+            if difference[-1] < -2 * std:
+                buying_power = float(api.get_account().buying_power)
+                if buying_power < 25000:
+                    print("not enough money")
+                    break
+                comp_price = float(api.get_latest_trade(company.name).price)
+                print("Buying {}".format(company.name))
+                try:
+                    company.current_order = api.submit_order(
+                        symbol=company.name,
+                        qty=round(20000 / comp_price),
+                        side='buy',
+                        type='market',
+                        time_in_force='day'
+                    )
+                except Exception as e:
+                    print(e)
+                    print("Order for {} didn't work".format(company.name))
+                    break
+                company.holding = True
+                company.last_buy = datetime.now()
+                while True:
+                    company.current_order = api.get_order(company.current_order.id)
+                    if company.current_order.filled_at is not None:
+                        break
+                    time.sleep(5)
+                company.current_order = api.submit_order(
+                    symbol=company.name,
+                    qty=company.current_order.qty,
+                    side="sell",
+                    type="limit",
+                    time_in_force="day",
+                    limit_price=float(company.current_order.filled_avg_price) + std
+                )
