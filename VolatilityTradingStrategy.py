@@ -61,12 +61,12 @@ def run_live():
 def update_positions(api: tradeapi, companies: [Company]):
     for company in companies:
         try:
-            curPrice = float(api.get_latest_trade(company.name).price)
+            cur_price = float(api.get_latest_trade(company.name).price)
             time.sleep(1)
         except:
             print("bad price for {}".format(company.name))
             break
-        company.close = np.append(company.close[1:], [curPrice])
+        company.close = np.append(company.close[1:], [cur_price])
         difference = get_ema_difference(5, 100, company)
         std = standard_deviation(difference)
         if not company.holding:
@@ -148,12 +148,12 @@ def init_purchased_companies(api: tradeapi.REST, companies: [Company]):
 def layer_positions(api: tradeapi, companies: [Company]):
     for company in companies:
         try:
-            curPrice = float(api.get_latest_trade(company.name).price)
+            cur_price = float(api.get_latest_trade(company.name).price)
             time.sleep(1)
         except:
             print("bad price for {}".format(company.name))
             break
-        company.close = np.append(company.close[1:], [curPrice])
+        company.close = np.append(company.close[1:], [cur_price])
         difference = get_ema_difference(5, 100, company)
         std = standard_deviation(difference)
         if company.last_buy is None or (company.last_buy - datetime.now()).seconds > 300:
