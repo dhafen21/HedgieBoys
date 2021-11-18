@@ -50,8 +50,12 @@ def run_live():
     names = get_trade_list()
     companies = init_companies_alpaca(names, api, "1Min", 1000)
     init_purchased_companies(api, companies)
+    while not api.get_clock().is_open:
+        if time.localtime().tm_min % 10 == 0:
+            print("Still Premarket: {}".format(datetime.now()))
+        time.sleep(1)
 
-    while time.localtime().tm_hour < 15:
+    while api.get_clock().is_open:
         update_positions(api, companies)
         if time.localtime().tm_min % 5 == 0:
             print(datetime.now())
